@@ -29,6 +29,24 @@ const Task = sequelize.define('task', {
   paranoid: true 
 })
 
+Task.afterCreate(async (task) => {
+  const service = require('../services/taskService');
+  await service._updateAnalytics(task.userId);
+});
+
+Task.afterUpdate(async (task) => {
+  if (task.changed('isCompleted')) {
+    const service = require('../services/taskService');
+    await service._updateAnalytics(task.userId);
+  }
+});
+
+Task.afterDestroy(async (task) => {
+  const service = require('../services/taskService');
+  await service._updateAnalytics(task.userId);
+});
+
+
 const Subtask = sequelize.define('subtask', {
 	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
 	name:{type: DataTypes.STRING, allowNull: false},
@@ -36,13 +54,17 @@ const Subtask = sequelize.define('subtask', {
 })
 
 const TaskAnalytics = sequelize.define('taskAnalytics', {
-	id: {type:DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-	date: {type:DataTypes.DATEONLY,},
-	totalTask: {type: DataTypes.INTEGER, defaultValue: 0},
-	completedTask: {type: DataTypes.INTEGER, defaultValue: 0},
-	completionRate: {type: DataTypes.INTEGER,}, // Процент выполнения задач
-	productivityScore: {type: DataTypes.INTEGER},
+	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+	userId: { type: DataTypes.INTEGER, allowNull: false,unique: true},
+	totalTasks: { type: DataTypes.INTEGER, defaultValue: 0 },
+	completedTasks: { type: DataTypes.INTEGER, defaultValue: 0 },
+	completionRate: { type: DataTypes.FLOAT, defaultValue: 0 },
+	lastUpdated: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, {
+	timestamps: false
 })
+
+
 
 const Friend = sequelize.define('friend', {
 	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
@@ -60,7 +82,7 @@ Task.belongsTo(User)
 Task.hasMany(Subtask)
 Subtask.belongsTo(Task)
 
-User.hasMany(TaskAnalytics)
+User.hasOne(TaskAnalytics)
 TaskAnalytics.belongsTo(User)
 
 User.belongsTo(User, {
