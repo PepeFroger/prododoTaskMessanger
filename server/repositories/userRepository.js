@@ -3,7 +3,7 @@ const ApiError = require('../error/ApiError')
 
 class UserRepository{
 	async findByEmail(email){
-		return User.findOne({were: {email} })
+		return User.findOne({where: {email} })
 	}
 
 	async create({name, email, password}){

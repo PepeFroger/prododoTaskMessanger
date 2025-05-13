@@ -3,16 +3,31 @@ const {DataTypes} = require('sequelize')
 const bcrypt = require('bcrypt')
 
 const User = sequelize.define('user', {
-	id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement:true},
-	name:{type: DataTypes.STRING,},
-	email: {type: DataTypes.STRING, unique: true, allowNull: false, validate: {isEmail: true}},
-	password: {type: DataTypes.STRING, allowNull: false, set(value){
-		this.setDataValue('password', bcrypt.hashSync(value, 10))
-	}},
-	role: {type: DataTypes.ENUM('USER', 'ADMIN'), defaultValue: 'USER'}	
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+  name: {type: DataTypes.STRING},
+  email: {type: DataTypes.STRING, unique: true, allowNull: false, validate: { isEmail: true }},
+  password: {type: DataTypes.STRING, allowNull: false,},
+	role: {type: DataTypes.ENUM('USER', 'ADMIN'),defaultValue: 'USER'}
 }, 
-	{timestamps: true, paranoid: true}
-)
+{
+  timestamps: true,
+  paranoid: false,
+  hooks: {
+		beforeValidate: (user) => {
+    if (user.password && user.password.length < 8) {
+      throw new Error('Пароль должен содержать минимум 8 символов');}},
+    beforeCreate: async (user) => {
+      if (user.password) {
+        user.password = await bcrypt.hash(user.password, 10);}},
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        user.password = await bcrypt.hash(user.password, 10);}}
+}});
+
+
+User.prototype.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 const Task = sequelize.define('task', {
 	id: {type:DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
@@ -85,12 +100,19 @@ Subtask.belongsTo(Task)
 User.hasOne(TaskAnalytics)
 TaskAnalytics.belongsTo(User)
 
-User.belongsTo(User, {
-	through: Friend,
-	as: 'friends',
-	foreignKey: 'userId',
-	otherKey: 'friendId'
-})
+User.belongsToMany(User, {
+  through: Friend,
+  as: 'friends',
+  foreignKey: 'userId',    // Кто добавляет в друзья
+  otherKey: 'friendId'     // Кого добавляют в друзья
+});
+
+User.belongsToMany(User, {
+  through: Friend,
+  as: 'friendOf',
+  foreignKey: 'friendId',  // Кого добавляют в друзья
+  otherKey: 'userId'       // Кто добавляет
+});
 
 
 module.exports = {

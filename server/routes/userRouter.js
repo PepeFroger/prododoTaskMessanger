@@ -9,7 +9,6 @@ router.post('/login', userController.login) // вход
 
 router.use(authMiddleware);
 
-router.post('/auth', userController.check) // аунтификация  
 router.get('/profile', userController.getProfile)  //получение 
 router.patch('/profile', userController.updateProfile) // обновление 
 router.delete('/profile', userController.deleteProfile) // удаление
