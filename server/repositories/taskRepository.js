@@ -1,41 +1,36 @@
-const { Task } = require('../models/models')
-
+const { Task } = require('../models/models');
+const ApiError = require('../error/ApiError');
 
 class TaskRepository {
-
   async create(data) {
     return Task.create(data);
   }
 
-
-  async findById(id, options = {}) {
-    return Task.findByPk(id, options);
+  async findById(id) {
+    return Task.findByPk(id, {
+      include: ['Subtasks']
+    });
   }
 
   async findAll(options = {}) {
-    return Task.findAll(options);
-  }
-
-
-  async update(id, data, options = {}) {
-    const [affectedRows] = await Task.update(data, { 
-      where: { id },
+    const finalOptions = {
+      include: options.include || ['Subtasks'],
+      paranoid: options.paranoid !== false,
       ...options
-    });
-    return affectedRows > 0;
+    };
+    return Task.findAll(finalOptions);
   }
 
-
-  async delete(id, options = {}) {
-    return Task.destroy({ 
-      where: { id },
-      ...options
-    });
+  async update(id, data) {
+    const task = await Task.findByPk(id);
+    if (!task) throw ApiError.notFound('Task not found');
+    return task.update(data);
   }
 
-
-  async count(where = {}) {
-    return Task.count({ where });
+  async delete(id) {
+    const task = await Task.findByPk(id);
+    if (!task) throw ApiError.notFound('Task not found');
+    return task.destroy();
   }
 }
 

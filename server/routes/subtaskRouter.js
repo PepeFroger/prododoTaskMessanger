@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware')
 router.use(authMiddleware)
 
 router.post('/:taskId', subtaskController.createSubtask)
-router.get('/:taskId', subtaskController.getAllSubtask)
+router.get('/:taskId', subtaskController.getAllSubtasks)
 router.patch('/:id', subtaskController.updateSubtask)
 router.delete('/:id', subtaskController.deleteSubtask)
 
