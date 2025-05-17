@@ -68,17 +68,17 @@ Task.hasMany(Subtask, {
 Subtask.belongsTo(Task);
 
 User.belongsToMany(User, {
-  through: Friend,
-  as: 'friends',
-  foreignKey: 'userId',
-  otherKey: 'friendId'
+    through: Friend,
+    as: 'friends',
+    foreignKey: 'userId',
+    otherKey: 'friendId'
 });
 
 User.belongsToMany(User, {
-  through: Friend,
-  as: 'friendOf',
-  foreignKey: 'friendId',
-  otherKey: 'userId'
+    through: Friend,
+    as: 'friendOf',
+    foreignKey: 'friendId',
+    otherKey: 'userId'
 });
 
 module.exports = {

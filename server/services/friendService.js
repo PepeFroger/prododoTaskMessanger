@@ -1,29 +1,61 @@
 const friendRepository = require('../repositories/friendRepository');
 const userRepository = require('../repositories/userRepository');
 const ApiError = require('../error/ApiError');
+const taskService = require('./taskService')
 
 class FriendService {
-    async sendFriendRequest(userId, friendId) {
-        if (userId === friendId) {
-            throw ApiError.BadRequest('Cannot send request to yourself');
-        }
+    async sendFriendRequestByEmail(userId, email) {
+    if (!email) {
+        throw ApiError.BadRequest('Email is required');
+    }
 
-        const friend = await userRepository.findById(friendId);
-        if (!friend) {
-            throw ApiError.NotFound('User not found');
-        }
+    // Находим пользователя по email
+    const friend = await userRepository.findByEmail(email);
+    if (!friend) {
+        throw ApiError.NotFound('User with this email not found');
+    }
 
-        const existingRequest = await friendRepository.findFriendRelation(userId, friendId);
-        if (existingRequest) {
+    const friendId = friend.id;
+
+    // Остальная логика остается как была
+    if (userId === friendId) {
+        throw ApiError.BadRequest('Cannot send request to yourself');
+    }
+
+    const existingRelation = await friendRepository.findFriendRelation(userId, friendId);
+    if (existingRelation) {
+        if (existingRelation.status === 'pending') {
+            if (existingRelation.friendId === userId) {
+                return await friendRepository.updateFriendRequest(existingRelation.id, 'accepted');
+            }
             throw ApiError.BadRequest('Friend request already exists');
         }
-
-        return await friendRepository.createFriendRequest(userId, friendId);
+        if (existingRelation.status === 'accepted') {
+            throw ApiError.BadRequest('You are already friends');
+        }
     }
+
+    return await friendRepository.createFriendRequest(userId, friendId);
+}
 
     async getFriendRequests(userId) {
-        return await friendRepository.getFriendRequests(userId);
-    }
+    const requests = await friendRepository.getFriendRequests(userId);
+    
+    // Добавляем информацию об отправителе
+    return Promise.all(requests.map(async request => {
+        const sender = await userRepository.findById(request.userId);
+        return {
+            id: request.id,
+            status: request.status,
+            createdAt: request.createdAt,
+            sender: {
+                id: sender.id,
+                name: sender.name,
+                email: sender.email
+            }
+        };
+    }));
+}
 
     async respondToRequest(userId, requestId, status) {
         const request = await friendRepository.findFriendRequest(requestId);
@@ -58,6 +90,35 @@ class FriendService {
 
         await friendRepository.deleteFriendRequest(relation.id);
         return { success: true };
+    }
+
+    async getFriendAnalytics(userId, friendId) {
+        // 1. Проверяем дружеские отношения
+        const isFriend = await friendRepository.findFriendRelation(userId, friendId);
+        if (!isFriend || isFriend.status !== 'accepted') {
+            throw ApiError.badRequest('User is not your friend');
+        }
+
+        // 2. Получаем данные друга
+        const friend = await userRepository.findById(friendId);
+        if (!friend) {
+            throw ApiError.notFound('Friend not found');
+        }
+
+        // 3. Используем taskService для получения аналитики
+        const analytics = await taskService.getFullAnalytics(friendId);
+        
+        return {
+            friend: {
+                id: friend.id,
+                name: friend.name,
+                email: friend.email
+            },
+            tasks: analytics.summary,
+            subtasks: analytics.subtasks,
+            trends: analytics.trends,
+            updatedAt: analytics.updatedAt
+        };
     }
 }
 

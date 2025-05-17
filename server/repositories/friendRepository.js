@@ -1,4 +1,5 @@
 const { Friend, User } = require('../models/models');
+const { Op } = require('sequelize');
 
 class FriendRepository {
     async createFriendRequest(userId, friendId) {
@@ -27,40 +28,42 @@ class FriendRepository {
     }
 
     async getFriendRequests(userId) {
-        return await Friend.findAll({
-            where: { friendId: userId, status: 'pending' },
-            include: [{
-                model: User,
-                as: 'user',
-                attributes: ['id', 'name', 'email']
-            }]
-        });
-    }
+    return await Friend.findAll({
+        where: { 
+            friendId: userId,
+            status: 'pending'
+        },
+        order: [['createdAt', 'DESC']]
+    });
+}
 
     async getFriendsList(userId) {
-        return await Friend.findAll({
-            where: {
-                [Op.or]: [
-                    { userId, status: 'accepted' },
-                    { friendId: userId, status: 'accepted' }
-                ]
-            },
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: ['id', 'name', 'email'],
-                    where: { id: { [Op.ne]: userId } }
-                },
-                {
-                    model: User,
-                    as: 'friend',
-                    attributes: ['id', 'name', 'email'],
-                    where: { id: { [Op.ne]: userId } }
-                }
+    // Получаем все подтвержденные дружеские связи
+    const relations = await Friend.findAll({
+        where: {
+            status: 'accepted',
+            [Op.or]: [
+                { userId: userId },
+                { friendId: userId }
             ]
-        });
-    }
+        }
+    });
+
+    // Собираем ID всех друзей
+    const friendIds = relations.map(relation => 
+        relation.userId === userId ? relation.friendId : relation.userId
+    );
+
+    // Получаем полную информацию о друзьях
+    return await User.findAll({
+        where: {
+            id: {
+                [Op.in]: friendIds
+            }
+        },
+        attributes: ['id', 'name', 'email']
+    });
+  }
 
     async findFriendRelation(userId, friendId) {
         return await Friend.findOne({
