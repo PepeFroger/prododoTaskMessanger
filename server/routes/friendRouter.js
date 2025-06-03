@@ -10,6 +10,7 @@ router.get('/requests', friendController.getFriendRequests);
 router.get('/analytics/:friendId', friendController.getFriendAnalytics);
 router.patch('/requests/:id', friendController.respondToRequests);
 router.get('/', friendController.getFriendList);
+
 router.delete('/:friendId', friendController.removeFriend);
 
 module.exports = router;
