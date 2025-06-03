@@ -6,20 +6,20 @@ const taskService = require('./taskService')
 class FriendService {
     async sendFriendRequestByEmail(userId, email) {
     if (!email) {
-        throw ApiError.BadRequest('Email is required');
+        throw ApiError.badRequest('Email is required');
     }
 
     // Находим пользователя по email
     const friend = await userRepository.findByEmail(email);
     if (!friend) {
-        throw ApiError.NotFound('User with this email not found');
+        throw ApiError.badRequest('User with this email not found');
     }
 
     const friendId = friend.id;
 
     // Остальная логика остается как была
     if (userId === friendId) {
-        throw ApiError.BadRequest('Cannot send request to yourself');
+        throw ApiError.badRequest('Cannot send request to yourself');
     }
 
     const existingRelation = await friendRepository.findFriendRelation(userId, friendId);
@@ -28,10 +28,10 @@ class FriendService {
             if (existingRelation.friendId === userId) {
                 return await friendRepository.updateFriendRequest(existingRelation.id, 'accepted');
             }
-            throw ApiError.BadRequest('Friend request already exists');
+            throw ApiError.badRequest('Friend request already exists');
         }
         if (existingRelation.status === 'accepted') {
-            throw ApiError.BadRequest('You are already friends');
+            throw ApiError.badRequest('You are already friends');
         }
     }
 
@@ -60,15 +60,15 @@ class FriendService {
     async respondToRequest(userId, requestId, status) {
         const request = await friendRepository.findFriendRequest(requestId);
         if (!request || request.friendId !== userId) {
-            throw ApiError.NotFound('Request not found or access denied');
+            throw ApiError.badRequest('Request not found or access denied');
         }
 
         if (request.status !== 'pending') {
-            throw ApiError.BadRequest('Request already processed');
+            throw ApiError.badRequest('Request already processed');
         }
 
         if (!['accepted', 'rejected'].includes(status)) {
-            throw ApiError.BadRequest('Invalid status');
+            throw ApiError.badRequest('Invalid status');
         }
 
         return await friendRepository.updateFriendRequest(requestId, status);
@@ -81,11 +81,11 @@ class FriendService {
     async removeFriend(userId, friendId) {
         const relation = await friendRepository.findFriendRelation(userId, friendId);
         if (!relation) {
-            throw ApiError.NotFound('Friend relation not found');
+            throw ApiError.badRequest('Friend relation not found');
         }
 
         if (relation.status !== 'accepted') {
-            throw ApiError.BadRequest('Only accepted friends can be removed');
+            throw ApiError.badRequest('Only accepted friends can be removed');
         }
 
         await friendRepository.deleteFriendRequest(relation.id);
@@ -102,7 +102,7 @@ class FriendService {
         // 2. Получаем данные друга
         const friend = await userRepository.findById(friendId);
         if (!friend) {
-            throw ApiError.notFound('Friend not found');
+            throw ApiError.badRequest('Friend not found');
         }
 
         // 3. Используем taskService для получения аналитики
