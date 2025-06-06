@@ -1,0 +1,78 @@
+/* Основные стили для шапки */
+.home-header {
+  display: flex; /* Используем flexbox для расположения элементов */
+  justify-content: space-between; /* Распределяем пространство между элементами */
+  align-items: center; /* Выравниваем элементы по центру по вертикали */
+  padding: 1rem 2rem; /* Внутренние отступы: 1rem сверху/снизу, 2rem слева/справа */
+  background-color: #1E1F22; /* Белый фон */
+  position: sticky; /* Фиксируем шапку при прокрутке */
+  top: 0; /* Прилипаем к верху */
+  z-index: 100; /* Убедимся, что шапка поверх других элементов */
+}
+
+/* Стили для иконки/логотипа */
+.icon {
+  display: flex;
+  align-items: center;
+}
+
+.icon__text {
+  font-size: 1.5rem; /* Размер шрифта */
+  font-weight: bold; /* Жирное начертание */
+  color: #DBDEE1; /* Темно-серый цвет текста */
+  margin: 0; /* Убираем внешние отступы */
+  letter-spacing: 1px; /* Расстояние между буквами */
+}
+
+/* Контейнер для добавления друзей */
+.add-friend-conteiner {
+  display: flex;
+  gap: 0.5rem; /* Расстояние между инпутом и кнопкой */
+}
+
+/* Стили для поля ввода */
+.add-frinend__input {
+	background-color: #60626D;
+  padding: 0.5rem 1rem; /* Внутренние отступы */
+  border: 1px solid #DBDEE1; /* Серая рамка */
+  border-radius: 50px; /* Скругленные углы */
+  font-size: 1rem; /* Размер шрифта */
+  outline: none; /* Убираем стандартный outline */
+  transition: border-color 0.3s; /* Плавное изменение цвета рамки */
+}
+
+.add-frinend__input:focus {
+  border-color: #5865F2; /* Синяя рамка при фокусе */
+}
+
+/* Стили для кнопки */
+.add-friend__btn {
+  padding: 0.5rem 1rem; /* Внутренние отступы */
+  background-color: #60626D; /* Синий фон */
+  border: none; /* Убираем рамку */
+  border-radius: 4px; /* Скругленные углы */
+  cursor: pointer; /* Курсор-указатель при наведении */
+  font-size: 1rem; /* Размер шрифта */
+  transition: background-color 0.3s; /* Плавное изменение фона */
+}
+
+.add-friend__btn:hover {
+  background-color: #0056b3; /* Темно-синий фон при наведении */
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .home-header {
+    padding: 1rem; /* Уменьшаем отступы на мобильных */
+    flex-direction: column; /* Элементы в столбик */
+    gap: 1rem; /* Расстояние между элементами */
+  }
+  
+  .add-friend-conteiner {
+    width: 100%; /* Занимаем всю ширину */
+  }
+  
+  .add-frinend__input {
+    flex-grow: 1; /* Инпут занимает все доступное пространство */
+  }
+}

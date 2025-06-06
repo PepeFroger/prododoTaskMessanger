@@ -1,0 +1,5 @@
+export const LOGIN_ROUTE = '/login'
+export const REGISTRATION_ROUTE = '/registration'
+export const TASK_ROUTE = '/task'
+export const ANALITIC_ROUTE = '/analitic'
+export const TASKBOARD_ROUTE = '/'

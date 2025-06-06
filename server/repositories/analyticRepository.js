@@ -1,6 +1,6 @@
 const { TaskAnalytics } = require('../models/models')
 
-class AnalyticRepository {
+class AnalyticRepository{
   async findByUserId(userId) {
     return TaskAnalytics.findOne({ where: { userId } })
   }
